@@ -14,20 +14,27 @@ const (
 type Hash [HASH_SIZE]byte
 
 type Block struct {
+	Nonce         int
 	Timestamp     int64
 	Data          []byte
 	PrevBlockHash Hash
 	BlockHash     Hash
+	Difficulty    uint32
 }
 
-func NewBlock(data string, prevBlockHash Hash) *Block {
-	block := &Block{time.Now().Unix(), []byte(data), prevBlockHash, Hash{}}
-	block.SetHash()
+func NewBlock(data string, prevBlockHash Hash, difficulty uint32) *Block {
+	block := &Block{0, time.Now().Unix(), []byte(data), prevBlockHash, Hash{}, difficulty}
+	pow := NewProofOfWork(block)
+	nonce, hash := pow.Run()
+
+	block.BlockHash = hash
+	block.Nonce = nonce
+
 	return block
 }
 
-func NewGenesisBlock() *Block {
-	return NewBlock("Genesis Block", Hash{})
+func NewGenesisBlock(difficulty uint32) *Block {
+	return NewBlock("Genesis Block", Hash{}, difficulty)
 }
 
 func (b *Block) SetHash() {
