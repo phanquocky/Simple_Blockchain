@@ -3,6 +3,9 @@ package blockchain
 import (
 	"blockchain_go/block"
 	"encoding/binary"
+	"log"
+
+	"github.com/boltdb/bolt"
 )
 
 var (
@@ -10,45 +13,87 @@ var (
 
 	SIZE_DIFFICULTY_RESET  = 2016 // reset difficulty after 2016 block
 	AVERAGE_TIME_FOR_BLOCK = 10   // 10 minute for one block
+	BLOCK_BUCKET           = "blockbucket"
 )
 
 type Blockchain struct {
-	Blocks       []*block.Block
-	MapBlockHash map[block.Hash]*block.Block
-	Difficulty   uint32
+	Tip        []byte
+	DB         *bolt.DB
+	Difficulty uint32
 }
 
 func NewBlockchain() *Blockchain {
-	blockchain :=
-		Blockchain{
-			[]*block.Block{block.NewGenesisBlock(DEFAULT_DIFFICULTY)},
-			map[block.Hash]*block.Block{},
-			DEFAULT_DIFFICULTY,
+	var tip []byte
+	db, err := bolt.Open("my.db", 0600, nil)
+	if err != nil {
+		log.Println("Cannot Open Database!")
+		return nil
+	}
+
+	err = db.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BLOCK_BUCKET))
+
+		if b == nil {
+			genesis := block.NewGenesisBlock(DEFAULT_DIFFICULTY)
+			b, err := tx.CreateBucket([]byte(BLOCK_BUCKET))
+			if err != nil {
+				return err
+			}
+			err = b.Put(genesis.BlockHash[:], genesis.Serialize())
+			err = b.Put([]byte("l"), genesis.BlockHash[:])
+			if err != nil {
+				return err
+			}
+
+			tip = genesis.BlockHash[:]
+		} else {
+			tip = b.Get([]byte("l"))
 		}
 
-	genesisBlock := blockchain.Blocks[0]
-	blockchain.MapBlockHash[genesisBlock.BlockHash] = genesisBlock
+		return nil
+	})
 
-	return &blockchain
+	bc := Blockchain{tip, db, DEFAULT_DIFFICULTY}
+
+	return &bc
 }
 
 func (bc *Blockchain) AddBlock(data string) {
-	prevBlock := bc.Blocks[len(bc.Blocks)-1]
-	newBlock := block.NewBlock(data, prevBlock.BlockHash, bc.Difficulty)
-	bc.Blocks = append(bc.Blocks, newBlock)
-	bc.MapBlockHash[newBlock.BlockHash] = newBlock
+	var lastHash []byte
+	err := bc.DB.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BLOCK_BUCKET))
+		lastHash = b.Get([]byte("l"))
+
+		return nil
+	})
+	if err != nil {
+		log.Println("Error cannot reading from database, ", err)
+		return
+	}
+
+	newBlock := block.NewBlock(data, block.Hash(lastHash), bc.Difficulty)
+
+	err = bc.DB.Update(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(BLOCK_BUCKET))
+		err := b.Put(newBlock.BlockHash[:], newBlock.Serialize())
+		if err != nil {
+			return err
+		}
+
+		err = b.Put([]byte("l"), newBlock.BlockHash[:])
+		if err != nil {
+			return err
+		}
+		bc.Tip = newBlock.BlockHash[:]
+
+		return nil
+	})
+	if err != nil {
+		log.Println("Error cannot update database when add block, ", err)
+		return
+	}
 
 	// bc.ResetDifficulty()
-}
-
-func (bc *Blockchain) FindBlockByHash(hash block.Hash) *block.Block {
-	block, exists := bc.MapBlockHash[hash]
-
-	if exists {
-		return block
-	} else {
-		return nil
-	}
 }
 
 // // this func will reset diff after 2016 block
