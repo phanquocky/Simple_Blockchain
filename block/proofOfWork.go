@@ -1,11 +1,10 @@
 package block
 
 import (
+	"blockchain_go/util"
 	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"fmt"
-	"log"
 	"math"
 	"math/big"
 )
@@ -23,7 +22,7 @@ func NewProofOfWork(b *Block) *ProofOfWork {
 		coefficient big.Int
 		target      *big.Int
 	)
-	diffcultyBytes := Uint32ToHex(b.Difficulty)
+	diffcultyBytes := util.Uint32ToHex(b.Difficulty)
 	exponent = uint8(diffcultyBytes[0])
 	coefficient.SetBytes(diffcultyBytes[1:])
 
@@ -41,10 +40,10 @@ func (pow *ProofOfWork) prepareData(nonce int) []byte {
 	data := bytes.Join(
 		[][]byte{
 			pow.block.PrevBlockHash[:],
-			pow.block.Data,
-			Int64ToHex(pow.block.Timestamp),
-			Int64ToHex(int64(TARGET_BITS)),
-			Int64ToHex(int64(nonce)),
+			pow.block.HashTransactions(),
+			util.Int64ToHex(pow.block.Timestamp),
+			util.Int64ToHex(int64(TARGET_BITS)),
+			util.Int64ToHex(int64(nonce)),
 		},
 		[]byte{},
 	)
@@ -61,7 +60,7 @@ func (pow *ProofOfWork) Run() (int, Hash) {
 	nonce := 0
 	maxNonce := math.MaxInt64
 
-	fmt.Printf("Mining the block containing \"%s\"\n", pow.block.Data)
+	fmt.Printf("Mining the block containing \"%x\"\n", pow.block.HashTransactions())
 	for nonce < maxNonce {
 		data := pow.prepareData(nonce)
 		hash = sha256.Sum256(data)
@@ -89,26 +88,4 @@ func (pow *ProofOfWork) Validate() bool {
 	isValid := hashInt.Cmp(pow.target) == -1
 
 	return isValid
-}
-
-// IntToHex converts an int64 to a byte array
-func Int64ToHex(num int64) []byte {
-	buff := new(bytes.Buffer)
-	err := binary.Write(buff, binary.BigEndian, num)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return buff.Bytes()
-}
-
-// Int32ToHex converts an int32 to a byte array
-func Uint32ToHex(num uint32) []byte {
-	buff := new(bytes.Buffer)
-	err := binary.Write(buff, binary.BigEndian, num)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	return buff.Bytes()
 }
