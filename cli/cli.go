@@ -18,6 +18,7 @@ func (cli *CLI) Run() {
 		createBlockchainCmd = flag.NewFlagSet("createblockchain", flag.ExitOnError)
 		getBalanceCmd       = flag.NewFlagSet("getbalance", flag.ExitOnError)
 		transferCmd         = flag.NewFlagSet("transfer", flag.ExitOnError)
+		createWalletCmd     = flag.NewFlagSet("createwallet", flag.ExitOnError)
 	)
 
 	var (
@@ -74,6 +75,14 @@ func (cli *CLI) Run() {
 		}
 
 		cli.transfer(*transferFrom, *transferTo, *transferAmount)
+
+	case "createwallet":
+		err := createWalletCmd.Parse(os.Args[2:])
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		cli.createWallet()
 	default:
 		cli.printUsage()
 		os.Exit(1)

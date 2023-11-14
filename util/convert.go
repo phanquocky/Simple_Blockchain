@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/binary"
 	"log"
+
+	"github.com/btcsuite/btcd/btcutil/base58"
 )
 
 // IntToHex converts an int64 to a byte array
@@ -26,4 +28,9 @@ func Uint32ToHex(num uint32) []byte {
 	}
 
 	return buff.Bytes()
+}
+
+func GetPubkeyHash(address string) []byte {
+	pubKeyHash := base58.Decode(address)
+	return pubKeyHash[1 : len(pubKeyHash)-4]
 }

@@ -1,17 +1,26 @@
 package tx
 
+import (
+	"blockchain_go/util"
+	"bytes"
+)
+
 type TXOutput struct {
-	Value        int
-	ScriptPubKey string
+	Value      int
+	PubKeyHash []byte
 }
 
-func (out *TXOutput) CanBeUnlockedWith(unlockingData string) bool {
-	return out.ScriptPubKey == unlockingData
+func (out *TXOutput) Lock(address string) {
+	out.PubKeyHash = util.GetPubkeyHash(address)
 }
 
-func NewTxOutput(value int, scriptPubkey string) *TXOutput {
+func (out *TXOutput) IsLockedWithKey(pubKeyHash []byte) bool {
+	return bytes.Equal(out.PubKeyHash, pubKeyHash)
+}
+
+func NewTxOutput(value int, pubKeyHash []byte) *TXOutput {
 	return &TXOutput{
-		Value:        value,
-		ScriptPubKey: scriptPubkey,
+		Value:      value,
+		PubKeyHash: pubKeyHash,
 	}
 }

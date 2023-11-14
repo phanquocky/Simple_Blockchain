@@ -3,17 +3,20 @@ package cli
 import (
 	"blockchain_go/blockchain"
 	"blockchain_go/tx"
+	"blockchain_go/util"
 	"fmt"
 	"log"
 )
 
 func (cli *CLI) transfer(from, to string, amount uint) {
 	var (
-		bc           = blockchain.ReadBlockchain()
-		utxos        = bc.FindUTXO(from)
-		transferTx   = tx.NewTransaction()
-		txAmount     = 0
-		changeAmount = 0
+		bc             = blockchain.ReadBlockchain()
+		utxos          = bc.FindUTXO(from)
+		transferTx     = tx.NewTransaction()
+		txAmount       = 0
+		changeAmount   = 0
+		fromPubkeyHash = util.GetPubkeyHash(from)
+		toPubkeyHash   = util.GetPubkeyHash(to)
 	)
 
 	// add inputs
@@ -21,7 +24,7 @@ UTXO:
 	for utx, idxs := range utxos {
 		for _, idx := range idxs {
 			txAmount += utx.Vout[idx].Value
-			txInput := tx.NewTxInput(utx.ID, idx, from)
+			txInput := tx.NewTxInput(utx.ID, idx, nil)
 			transferTx.AddTxInput(txInput)
 
 			if txAmount >= int(amount) {
@@ -39,8 +42,8 @@ UTXO:
 	changeAmount = txAmount - int(amount)
 	fmt.Printf("Change: %d, amount: %d \n", changeAmount, amount)
 	//add outputs
-	desOutput := tx.NewTxOutput(int(amount), to)
-	changeOutput := tx.NewTxOutput(changeAmount, from)
+	desOutput := tx.NewTxOutput(int(amount), toPubkeyHash)
+	changeOutput := tx.NewTxOutput(changeAmount, fromPubkeyHash)
 	transferTx.AddTxOutput(desOutput)
 	transferTx.AddTxOutput(changeOutput)
 

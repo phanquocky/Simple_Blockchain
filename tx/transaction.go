@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/sha256"
 	"encoding/gob"
-	"fmt"
 	"log"
 )
 
@@ -18,24 +17,24 @@ type Transaction struct {
 	Vout []TXOutput
 }
 
-func NewCoinbaseTX(to, data string) *Transaction {
-	if data == "" {
-		data = fmt.Sprintf("Reward to '%s'", to)
-	}
+func NewCoinbaseTX(address, data string) *Transaction {
 
-	txin := TXInput{[]byte{}, -1, data}
-	txout := TXOutput{SUBSIDY, to}
+	txin := TXInput{[]byte{}, -1, nil}
+	txout := TXOutput{SUBSIDY, nil}
+	txout.Lock(address)
+
 	tx := Transaction{nil, []TXInput{txin}, []TXOutput{txout}}
 	tx.SetID()
 
+	log.Printf("Reward to '%s' \n", address)
 	return &tx
 }
 
 func NewTransaction() *Transaction {
 	return &Transaction{
 		ID:   []byte{},
-		Vin:  make([]TXInput, 0, 0),
-		Vout: make([]TXOutput, 0, 0),
+		Vin:  make([]TXInput, 0),
+		Vout: make([]TXOutput, 0),
 	}
 }
 

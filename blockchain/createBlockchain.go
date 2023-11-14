@@ -5,6 +5,7 @@ import (
 	"blockchain_go/tx"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/boltdb/bolt"
@@ -13,8 +14,14 @@ import (
 func CreateBlockchain(address string) *Blockchain {
 	var tip []byte
 
+	// remove "my.db" file
+	err := os.Remove(DB_FILE)
+	if err != nil {
+		log.Println("Cannot remove file, ", DB_FILE, err)
+	}
+
 	fmt.Println("create blockchain!")
-	db, err := bolt.Open("my.db", 0600, &bolt.Options{Timeout: 10 * time.Second})
+	db, err := bolt.Open(DB_FILE, 0600, &bolt.Options{Timeout: 10 * time.Second})
 	fmt.Println("db: ", db, "err ", err)
 	if err != nil {
 		log.Println("Cannot Open Database!")
