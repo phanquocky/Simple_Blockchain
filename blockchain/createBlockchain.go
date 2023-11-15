@@ -3,7 +3,6 @@ package blockchain
 import (
 	"blockchain_go/block"
 	"blockchain_go/tx"
-	"fmt"
 	"log"
 	"os"
 	"time"
@@ -20,9 +19,7 @@ func CreateBlockchain(address string) *Blockchain {
 		log.Println("Cannot remove file, ", DB_FILE, err)
 	}
 
-	fmt.Println("create blockchain!")
 	db, err := bolt.Open(DB_FILE, 0600, &bolt.Options{Timeout: 10 * time.Second})
-	fmt.Println("db: ", db, "err ", err)
 	if err != nil {
 		log.Println("Cannot Open Database!")
 		return nil

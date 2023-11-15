@@ -2,7 +2,7 @@ package cli
 
 import (
 	"blockchain_go/blockchain"
-	"fmt"
+	"log"
 )
 
 func (cli *CLI) getBalance(address string) {
@@ -15,9 +15,9 @@ func (cli *CLI) getBalance(address string) {
 	for tx, outs := range UTXOs {
 		for _, out := range outs {
 			balance += tx.Vout[out].Value
-			fmt.Printf("UTXO: txId: %x, outputindx: %d , value: %d \n", tx.ID, out, tx.Vout[out].Value)
+			log.Printf("UTXO: txId: %x, outputindx: %d , value: %d \n", tx.ID, out, tx.Vout[out].Value)
 		}
 	}
 
-	fmt.Printf("Balance of '%s': %d\n", address, balance)
+	log.Printf("Balance of '%s': %d\n", address, balance)
 }

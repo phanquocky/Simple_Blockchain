@@ -1,13 +1,14 @@
 package wallet
 
 import (
+	"crypto/elliptic"
 	"encoding/json"
 	"log"
 	"os"
 )
 
 type Wallets struct {
-	Wallets map[string]*Wallet
+	Wallets map[string]*Wallet `json:"wallets"`
 }
 
 // NewWallets creates Wallets and fills it from a file if it exists
@@ -37,6 +38,7 @@ func (ws *Wallets) GetWallet(address string) Wallet {
 
 func (ws *Wallets) SaveToFile() {
 	walletsBytes, err := json.Marshal(ws)
+
 	if err != nil {
 		log.Println("Cannot encode wallets to bytes")
 		return
@@ -46,6 +48,7 @@ func (ws *Wallets) SaveToFile() {
 }
 
 func (ws *Wallets) ReadFromFile() error {
+	curve := elliptic.P256()
 	walletsBytes, err := os.ReadFile(WALLET_FILE)
 	if err != nil {
 		log.Println("Cannot read  wallets file")
@@ -53,5 +56,10 @@ func (ws *Wallets) ReadFromFile() error {
 	}
 
 	json.Unmarshal(walletsBytes, ws)
+
+	// TODO: ??? because when save to file it lose curve
+	for _, v := range ws.Wallets {
+		v.PrivateKey.Curve = curve
+	}
 	return nil
 }

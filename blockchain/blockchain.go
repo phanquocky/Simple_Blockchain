@@ -3,6 +3,7 @@ package blockchain
 import (
 	"blockchain_go/block"
 	"blockchain_go/tx"
+	"blockchain_go/txscript"
 	"encoding/binary"
 	"log"
 	"time"
@@ -61,6 +62,31 @@ func ReadBlockchain() *Blockchain {
 }
 
 func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
+	// verify transactions
+	for _, transaction := range transactions {
+		var prevOutputFetcher = make([]txscript.PrevOutputFetcher, len(transaction.Vin))
+
+		for idx, in := range transaction.Vin {
+			prevTx, err := bc.GetRawTransaction(in.Txid)
+			if err != nil {
+				log.Println("cannot get rawtransaction, ", err)
+				return
+			}
+
+			prevOutputFetcher[idx] = txscript.PrevOutputFetcher{
+				PkHash: prevTx.Vout[in.OutIdx].PubKeyHash,
+				Amt:    int64(prevTx.Vout[in.OutIdx].Value),
+			}
+		}
+
+		if !txscript.VerifyTransaction(transaction, prevOutputFetcher) {
+			log.Println("Verify transaction faile, ", transaction.ID)
+			return
+		}
+	}
+
+	log.Println("Verify all of transactions success!")
+
 	var lastHash []byte
 	err := bc.DB.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(BLOCK_BUCKET))
@@ -95,19 +121,4 @@ func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
 		return
 	}
 
-	// bc.ResetDifficulty()
 }
-
-// // this func will reset diff after 2016 block
-// func (bc *Blockchain) ResetDifficulty() {
-// 	if len(bc.Blocks)%SIZE_DIFFICULTY_RESET == 0 && len(bc.Blocks) > 0 {
-// 		actualTime := bc.Blocks[len(bc.Blocks)-1].Timestamp - bc.Blocks[len(bc.Blocks)-SIZE_DIFFICULTY_RESET].Timestamp
-// 		fmt.Println("Before reset: ", bc.Difficulty)
-// 		fmt.Println("Value: ", float64((int64(SIZE_DIFFICULTY_RESET))*int64(time.Duration(AVERAGE_TIME_FOR_BLOCK*int(time.Second)).Seconds())))
-
-// 		coeff := float64(actualTime / ((int64(SIZE_DIFFICULTY_RESET)) * int64(time.Duration(AVERAGE_TIME_FOR_BLOCK*int(time.Second)).Seconds())))
-// 		fmt.Println("Coeeff: ", coeff)
-// 		bc.Difficulty = uint32(float64(bc.Difficulty) * coeff)
-// 		fmt.Println("After reset: ", bc.Difficulty)
-// 	}
-// }

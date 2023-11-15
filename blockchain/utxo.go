@@ -27,11 +27,6 @@ func (bc *Blockchain) FindUTXO(address string) map[*tx.Transaction][]int {
 			for outIdx, out := range tx.Vout {
 				// Was the output spent?
 				if spentTXOs[txID] != nil {
-					// for _, spentOut := range spentTXOs[txID] {
-					// 	if spentOut == outIdx {
-					// 		continue Outputs
-					// 	}
-					// }
 					if slices.Contains(spentTXOs[txID], outIdx) {
 						continue Outputs
 					}
@@ -46,7 +41,7 @@ func (bc *Blockchain) FindUTXO(address string) map[*tx.Transaction][]int {
 				for _, in := range tx.Vin {
 					//TODO if in.CanUnlockOutputWith(address) {
 					inTxID := hex.EncodeToString(in.Txid)
-					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.Vout)
+					spentTXOs[inTxID] = append(spentTXOs[inTxID], in.OutIdx)
 					// }
 				}
 			}

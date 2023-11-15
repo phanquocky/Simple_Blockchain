@@ -2,14 +2,16 @@ package tx
 
 type TXInput struct {
 	Txid      []byte
-	Vout      int
+	OutIdx    int
 	Signature []byte
+	PubKey    []byte
 }
 
-func NewTxInput(txid []byte, vout int, signature []byte) *TXInput {
+func NewTxInput(txid []byte, vout int, signature []byte, pubkey []byte) *TXInput {
 	return &TXInput{
 		Txid:      txid,
-		Vout:      vout,
+		OutIdx:    vout,
 		Signature: signature,
+		PubKey:    pubkey,
 	}
 }
