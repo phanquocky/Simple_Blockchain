@@ -7,7 +7,10 @@ import (
 
 func (cli *CLI) createBlockchain(address string) {
 	bc := blockchain.CreateBlockchain(address)
-	bc.DB.Close()
+	defer bc.DB.Close()
+
+	UTXOSet := blockchain.UTXOSet{Blockchain: bc}
+	UTXOSet.Reindex()
 
 	log.Println("Blockchain create success!")
 }

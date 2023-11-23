@@ -5,6 +5,7 @@ import (
 	"blockchain_go/tx"
 	"blockchain_go/txscript"
 	"encoding/binary"
+	"fmt"
 	"log"
 	"time"
 
@@ -61,16 +62,17 @@ func ReadBlockchain() *Blockchain {
 	}
 }
 
-func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
+func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) *block.Block {
 	// verify transactions
 	for _, transaction := range transactions {
 		var prevOutputFetcher = make([]txscript.PrevOutputFetcher, len(transaction.Vin))
 
 		for idx, in := range transaction.Vin {
+			fmt.Printf("txVin: %x \n", in.Txid)
 			prevTx, err := bc.GetRawTransaction(in.Txid)
 			if err != nil {
 				log.Println("cannot get rawtransaction, ", err)
-				return
+				return nil
 			}
 
 			prevOutputFetcher[idx] = txscript.PrevOutputFetcher{
@@ -81,7 +83,7 @@ func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
 
 		if !txscript.VerifyTransaction(transaction, prevOutputFetcher) {
 			log.Println("Verify transaction faile, ", transaction.ID)
-			return
+			return nil
 		}
 	}
 
@@ -96,7 +98,7 @@ func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
 	})
 	if err != nil {
 		log.Println("Error cannot reading from database, ", err)
-		return
+		return nil
 	}
 
 	newBlock := block.NewBlock(transactions, block.Hash(lastHash), bc.Difficulty)
@@ -118,7 +120,9 @@ func (bc *Blockchain) AddBlock(transactions []*tx.Transaction) {
 	})
 	if err != nil {
 		log.Println("Error cannot update database when add block, ", err)
-		return
+		return nil
 	}
+
+	return newBlock
 
 }

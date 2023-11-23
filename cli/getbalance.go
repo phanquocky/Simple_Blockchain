@@ -2,6 +2,7 @@ package cli
 
 import (
 	"blockchain_go/blockchain"
+	"fmt"
 	"log"
 )
 
@@ -10,12 +11,15 @@ func (cli *CLI) getBalance(address string) {
 	defer bc.DB.Close()
 
 	balance := 0
-	UTXOs := bc.FindUTXO(address)
+	utxoSet := blockchain.NewUTXOSet(bc)
+	UTXOs := utxoSet.FindUTXOByAddress(address)
+	fmt.Println("utxoSet: ", UTXOs)
+	fmt.Println("Get Balance")
 
-	for tx, outs := range UTXOs {
-		for _, out := range outs {
-			balance += tx.Vout[out].Value
-			log.Printf("UTXO: txId: %x, outputindx: %d , value: %d \n", tx.ID, out, tx.Vout[out].Value)
+	for txID, outs := range UTXOs {
+		for _, out := range outs.Outputs {
+			balance += out.Value
+			log.Printf("UTXO: txId: %x, outputindx: %d , value: %d \n", txID, out.OutputIdx, out.Value)
 		}
 	}
 

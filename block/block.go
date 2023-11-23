@@ -1,6 +1,7 @@
 package block
 
 import (
+	tree "blockchain_go/merkleTree"
 	"blockchain_go/tx"
 	"bytes"
 	"crypto/sha256"
@@ -40,15 +41,13 @@ func NewGenesisBlock(coinbase *tx.Transaction, difficulty uint32) *Block {
 
 // HashTransactions returns a hash of the transactions in the block
 func (b *Block) HashTransactions() []byte {
-	var txHashes [][]byte
-	var txHash [32]byte
-
-	for _, tx := range b.Transactions {
-		txHashes = append(txHashes, tx.ID)
+	var transactions [][]byte
+	for _, transaction := range b.Transactions {
+		transactions = append(transactions, transaction.Serialize())
 	}
-	txHash = sha256.Sum256(bytes.Join(txHashes, []byte{}))
+	mTree := tree.NewMerkleTree(transactions)
 
-	return txHash[:]
+	return mTree.RootNode.Data
 }
 
 func (b *Block) Serialize() []byte {

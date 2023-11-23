@@ -6,13 +6,16 @@ import (
 	"blockchain_go/txscript"
 	"blockchain_go/util"
 	"blockchain_go/wallet"
+	"encoding/hex"
+	"fmt"
 	"log"
 )
 
 func (cli *CLI) transfer(from, to string, amount uint) {
 	var (
 		bc                 = blockchain.ReadBlockchain()
-		utxos              = bc.FindUTXO(from)
+		utxoSet            = blockchain.NewUTXOSet(bc)
+		utxos              = utxoSet.FindUTXOByAddress(from)
 		transferTx         = tx.NewTransaction()
 		txAmount           = 0
 		changeAmount       = 0
@@ -31,17 +34,19 @@ func (cli *CLI) transfer(from, to string, amount uint) {
 
 	// add inputs
 UTXO:
-	for utx, idxs := range utxos {
-		for _, idx := range idxs {
-			txAmount += utx.Vout[idx].Value
-			txInput := tx.NewTxInput(utx.ID, idx, nil, wallet.PublicKey)
+	for txID, outs := range utxos {
+		for _, out := range outs.Outputs {
+			txAmount += out.Value
+			fmt.Println("String TxID: ", txID)
+			txIDBytes, _ := hex.DecodeString(txID)
+			txInput := tx.NewTxInput(txIDBytes, out.OutputIdx, nil, wallet.PublicKey)
 			transferTx.AddTxInput(txInput)
 
 			// add prevoutput fetcher
 			prevOutputFetchers = append(prevOutputFetchers,
 				txscript.PrevOutputFetcher{
-					PkHash: utx.Vout[idx].PubKeyHash,
-					Amt:    int64(utx.Vout[idx].Value),
+					PkHash: out.PubKeyHash,
+					Amt:    int64(out.Value),
 				})
 
 			if txAmount >= int(amount) {
@@ -69,7 +74,8 @@ UTXO:
 	// sign transaction
 	txscript.SignRawTransaction(transferTx, wallet.PrivateKey, prevOutputFetchers)
 	// mine block
-	bc.AddBlock([]*tx.Transaction{transferTx})
+	newBlock := bc.AddBlock([]*tx.Transaction{transferTx})
+	utxoSet.Update(newBlock)
 	log.Printf("Transfer success, from: %s, to: %s, amount: %d !\n", from, to, amount)
 
 }

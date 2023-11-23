@@ -5,6 +5,7 @@ import (
 	"blockchain_go/tx"
 	"bytes"
 	"errors"
+	"fmt"
 )
 
 func (bc *Blockchain) GetRawTransaction(ID []byte) (*tx.Transaction, error) {
@@ -14,6 +15,7 @@ func (bc *Blockchain) GetRawTransaction(ID []byte) (*tx.Transaction, error) {
 		bl := bci.Next()
 
 		for _, tx := range bl.Transactions {
+			fmt.Printf("%x %x \n", tx.ID, ID)
 			if bytes.Equal(tx.ID, ID) {
 				return tx, nil
 			}
