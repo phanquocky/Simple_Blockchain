@@ -27,14 +27,19 @@ func NewMerkleTree(transactions []*Transaction) *MerkleTree {
 		nodes = append(nodes, NewMerkleNode(transaction.Data, nil, nil))
 	}
 
+	if len(nodes) == 1 {
+		// If only have 1 transaction, duplicate itself for make safer root
+		nodes = append(nodes, nodes[0])
+	}
+
 	for len(nodes) > 1 {
 		var newLevel []*MerkleNode
 		for i := 0; i < len(nodes); i += 2 {
 			left := nodes[i]
 
 			var right *MerkleNode
-			// If there are an odd number of nodes,
-			// the node without a partner is hashed with a copy of itself.
+			// If there are an odd number of nodes/leafs,
+			// the nodes/leafs without a partner is hashed with a copy of itself.
 			if i+1 < len(nodes) {
 				right = nodes[i+1]
 			} else {

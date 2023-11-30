@@ -29,7 +29,7 @@ func BuildBlockchain() *Blockchain {
 func CreateGenesisBlock() *Block {
 	// Create the initial block (genesis block)
 	transaction := &Transaction{Data: []byte("Genesis Transaction")}
-	block := NewBlock([]*Transaction{transaction}, []byte{})
+	block := NewBlock([]*Transaction{transaction}, make([]byte, 32))
 	return &block
 }
 
