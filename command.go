@@ -79,23 +79,32 @@ func addBlock(datas []string) {
 	bc.SaveBlockchain()
 }
 
-func validTransaction(data string, blockHash string) {
+func validTransaction(data []string, blockHash string) {
 	bc, err := LoadBlockchain()
 	if err != nil {
 		fmt.Println("Error loading blockchain:", err)
 		fmt.Println("Create new blockchain with createchain command")
 		return
 	}
-
+	var foundBlock = false
 	for _, block := range bc.Blocks {
 		if fmt.Sprintf("%x", block.Hash) == blockHash {
-			valid := block.MerkleTree.MerkleProof([]byte(data))
-			if valid {
-				fmt.Println("Transaction data is stored in the block")
-			} else {
-				fmt.Println("Transaction data is NOT stored in the block")
+			foundBlock = true
+			tree := NewMerkleTree(block.Transactions)
+
+			for _, d := range data {
+
+				valid := MerkleVerify(tree, []byte(d))
+				if valid {
+					fmt.Printf("Transaction data %v is stored in the block\n", d)
+				} else {
+					fmt.Printf("Transaction data %v is NOT stored in the block\n", d)
+				}
 			}
 			break
 		}
+	}
+	if foundBlock == false {
+		fmt.Printf("Block %v was not found in blockchain", blockHash)
 	}
 }

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"encoding/gob"
 	"fmt"
 	"os"
@@ -38,24 +37,6 @@ func (bc *Blockchain) AddBlock(transactions []*Transaction) {
 	prevBlock := bc.Blocks[len(bc.Blocks)-1]
 	newBlock := NewBlock(transactions, prevBlock.Hash)
 	bc.Blocks = append(bc.Blocks, &newBlock)
-}
-
-func (bc *Blockchain) Validate() bool {
-	for i := len(bc.Blocks) - 1; i > 0; i-- {
-		currentBlock := bc.Blocks[i]
-		previousBlock := bc.Blocks[i-1]
-
-		// Verify the hash of the current block
-		if !bytes.Equal(currentBlock.Hash, currentBlock.HashABLock()) {
-			return false
-		}
-
-		// Verify the previous block's hash
-		if !bytes.Equal(previousBlock.Hash, previousBlock.HashABLock()) {
-			return false
-		}
-	}
-	return true
 }
 
 func (bc *Blockchain) SaveBlockchain() error {

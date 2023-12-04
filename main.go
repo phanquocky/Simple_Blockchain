@@ -52,13 +52,14 @@ func main() {
 
 	case "validtran":
 		validTranCommand := flag.NewFlagSet("validtran", flag.ExitOnError)
-		data := validTranCommand.String("data", "", "Data of the transaction")
+		var data multiString
+		validTranCommand.Var(&data, "data", "Data for the block")
 		blockHash := validTranCommand.String("block", "", "Hash value of the block")
 		err := validTranCommand.Parse(os.Args[2:])
 		if err != nil {
 			validTranCommand.Usage()
 		} else {
-			validTransaction(*data, *blockHash)
+			validTransaction(data, *blockHash)
 		}
 
 	default:

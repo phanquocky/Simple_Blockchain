@@ -55,16 +55,27 @@ func NewMerkleTree(transactions []*Transaction) *MerkleTree {
 	return &MerkleTree{Root: nodes[0]}
 }
 
-func traverse(node *MerkleNode, targetValue []byte) bool {
+func traverse(node *MerkleNode, targetValue []byte) (bool, []byte) {
 	if node == nil {
-		return false
+		return false, make([]byte, 32)
 	}
+
 	if bytes.Equal(node.Data, targetValue) {
-		return true
+		return true, node.Data
 	}
-	return traverse(node.Left, targetValue) || traverse(node.Right, targetValue)
+	left, leftHash := traverse(node.Left, targetValue)
+	right, rightHash := traverse(node.Right, targetValue)
+
+	if left == true || right == true {
+		temp := sha256.Sum256(append(leftHash, rightHash...))
+		return true, temp[:]
+	}
+
+	return false, node.Data
+
 }
 
-func (tree *MerkleTree) MerkleProof(targetValue []byte) bool {
-	return traverse(tree.Root, targetValue)
+func MerkleVerify(tree *MerkleTree, data []byte) bool {
+	found, root := traverse(tree.Root, data)
+	return found == true && bytes.Equal(root, tree.Root.Data)
 }
