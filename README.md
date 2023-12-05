@@ -30,7 +30,11 @@ With executable file on Window. Create a new blockchain:
 $ blockchain_go.exe createchain
 $ blockchain_go.exe printchain
 
-Block index 0                                                                                                                   Timestamp:      2023-12-05 18:40:07 +0700 +07                                                                           Merkle Root:    e7a...0df                                        Prev Block:     000...000                                        Hash Value:     474...b04b
+Block index 0
+        Timestamp:      2023-12-05 18:40:07 +0700 +07
+        Merkle Root:    e7a...0df                                  
+        Prev Block:     000...000                                  
+        Hash Value:     474...b04b
 ```
 Now you can see your block chain has 1 block which is genesis block.
 Let's add a new block to blockchain.
@@ -53,6 +57,7 @@ Validate an transaction is in a block (through block's hash value - you can get 
 ```
 $ blockchain_go.exe validtran -data=xyz -data=123 -block=6a3...da3
 
-Transaction data xyz is stored in the block                                                                             Transaction data 123 is NOT stored in the block
+Transaction data xyz is stored in the block                                       
+Transaction data 123 is NOT stored in the block
 ```
 
