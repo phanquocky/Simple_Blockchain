@@ -4,7 +4,6 @@ import (
 	"blockchain_go/lab2/address"
 	"encoding/hex"
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/btcsuite/btcd/btcec/v2"
@@ -14,6 +13,7 @@ import (
 	"github.com/btcsuite/btcd/wire"
 )
 
+// getNewMultiSig function get new 2-2 multisig address
 func (cli *CLI) getNewMultiSig() error {
 	address, privKeys, redeem, err := address.Generate2to2Address()
 	if err != nil {
@@ -28,16 +28,21 @@ func (cli *CLI) getNewMultiSig() error {
 	return nil
 }
 
+// spendMultiSig function using 2 privkeys ans redeem to spend 2-2 address utxo
+// at output (prevhash:prevOutIdx)
 func (cli *CLI) spendMultiSig(privkeys [2]string, prevhash string, prevOutIdx uint32, redeem string) error {
 
+	// convert privkey string -> *btcec.PrivateKey
 	var privKeysbtc [2]*btcec.PrivateKey
 	for i, v := range privkeys {
-		privkey, _, err := stringToPrivKey(v)
+		privkey, err := stringToPrivKey(v)
 		if err != nil {
 			return err
 		}
 		privKeysbtc[i] = privkey
 	}
+
+	// creaate address1, address2 from 2 privkeys
 	pk1 := privKeysbtc[0].PubKey().SerializeCompressed()
 	address1, err := btcutil.NewAddressPubKey(pk1,
 		&chaincfg.TestNet3Params)
@@ -85,20 +90,11 @@ func (cli *CLI) spendMultiSig(privkeys [2]string, prevhash string, prevOutIdx ui
 		return err
 	}
 	scriptAddr, err := btcutil.NewAddressScriptHash(redeemBytes, &chaincfg.TestNet3Params)
-	fmt.Println("scriptAddr: ", scriptAddr.String())
-
-	signature, err := txscript.SignTxOutput(&chaincfg.TestNet3Params,
-		tx, 0, commitTx.MsgTx().TxOut[prevOutIdx].PkScript, txscript.SigHashAll,
-		mkGetKey(map[string]addressToKey{
-			address1.EncodeAddress(): {privKeysbtc[0], true},
-		}), mkGetScript(map[string][]byte{
-			scriptAddr.EncodeAddress(): redeemBytes,
-		}), nil)
 	if err != nil {
 		return err
 	}
 
-	signature, err = txscript.SignTxOutput(
+	signature, err := txscript.SignTxOutput(
 		&chaincfg.TestNet3Params, tx, 0,
 		commitTx.MsgTx().TxOut[prevOutIdx].PkScript, txscript.SigHashAll,
 		mkGetKey(map[string]addressToKey{
@@ -106,7 +102,7 @@ func (cli *CLI) spendMultiSig(privkeys [2]string, prevhash string, prevOutIdx ui
 			address2.EncodeAddress(): {privKeysbtc[1], true},
 		}), mkGetScript(map[string][]byte{
 			scriptAddr.EncodeAddress(): redeemBytes,
-		}), signature,
+		}), nil,
 	)
 	if err != nil {
 		return err

@@ -34,13 +34,13 @@ func createOutpoint(
 	return outpoint, nil
 }
 
-func stringToPrivKey(privkey string) (*btcec.PrivateKey, *btcec.PublicKey, error) {
+func stringToPrivKey(privkey string) (*btcec.PrivateKey, error) {
 	privkeyBytes, err := hex.DecodeString(privkey)
 	if err != nil {
 		log.Println("cannot decode string: err, ", privkey, err)
-		return nil, nil, err
+		return nil, err
 	}
 	privateKey, _ := btcec.PrivKeyFromBytes(privkeyBytes)
 
-	return privateKey, privateKey.PubKey(), nil
+	return privateKey, nil
 }

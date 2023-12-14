@@ -10,7 +10,7 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 )
 
-func GenerateAddress() (*btcutil.AddressPubKeyHash, string, error) {
+func GenerateP2pkhAddress() (*btcutil.AddressPubKeyHash, string, error) {
 	privKey, err := btcec.NewPrivateKey()
 	if err != nil {
 		log.Println("cannot create newPrivateKey ")
