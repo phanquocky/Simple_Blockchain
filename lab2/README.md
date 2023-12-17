@@ -10,7 +10,7 @@ ref: https://github.com/btcsuite/btcd
 
 ```bash
 # btcd --testnet -u <rpcuser> -P <rpcpassword>
-$ btcd --testnet -u admin -P admin123
+$ btcd --testnet --txindex -u admin -P admin123
 
 # btcwallet --testnet -u <rpcuser> -P <rpcpassword>
 $ btcwallet --testnet -u admin -P admin123
